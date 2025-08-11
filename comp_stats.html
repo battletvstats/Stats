@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Estatísticas da Partida</title>
+  <style>
+    body { background: #1e1e1e; color: #fff; font-family: Arial, sans-serif; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th, td { padding: 8px; text-align: center; }
+    th { background: #333; }
+    tr:nth-child(even) { background: #2c2c2c; }
+    .green { color: #4CAF50; }
+    .orange { color: orange; }
+    .red { color: red; }
+    .team-header { font-size: 20px; margin-top: 20px; display: flex; align-items: center; gap: 10px; }
+    .team-header img { width: 40px; height: 40px; }
+  </style>
+</head>
+<body>
+  <div id="stats"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const matchId = params.get("id");
+    const sheetURL = "https://opensheet.elk.sh/1UlQuUQXpMTBBlCpy9g5JNDFHPip9HtosxJRTW6ohC3o/Invitational";
+
+    fetch(sheetURL)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById("stats");
+        const matchData = data.filter(row => row.ID === matchId);
+        const teams = [...new Set(matchData.map(p => p.Time))];
+
+        teams.forEach(team => {
+          const players = matchData.filter(p => p.Time === team);
+          const logo = players[0].Logo;
+
+          container.innerHTML += `<div class="team-header"><img src="${logo}" /> ${team}</div>`;
+
+          const table = document.createElement("table");
+          table.innerHTML = `
+            <tr>
+              <th>Jogador</th><th>Rating</th><th>KD</th><th>Entry</th><th>KOST</th>
+              <th>KPR</th><th>SRV</th><th>1vX</th><th>Plants</th><th>Disable</th>
+              <th>HS%</th><th>Atk</th><th>Def</th>
+            </tr>
+          `;
+
+          players.forEach(p => {
+            table.innerHTML += `
+              <tr>
+                <td>${p.Jogador}</td>
+                <td class="${getColor(p.Rating)}">${p.Rating}</td>
+                <td>${p.KD}</td>
+                <td>${p.Entry}</td>
+                <td>${p.KOST}</td>
+                <td class="${getColor(p.KPR)}">${p.KPR}</td>
+                <td>${p.SRV}</td>
+                <td>${p['1vX']}</td>
+                <td>${p.Plants}</td>
+                <td>${p.Disable}</td>
+                <td>${p.HS}</td>
+                <td><img src="${p.Atk}" width="24" /></td>
+                <td><img src="${p.Def}" width="24" /></td>
+              </tr>
+            `;
+          });
+
+          container.appendChild(table);
+        });
+      });
+
+    function getColor(value) {
+      const v = parseFloat(value);
+      if (v >= 1.10) return "green";
+      if (v >= 0.85) return "orange";
+      return "red";
+    }
+  </script>
+</body>
+</html>
